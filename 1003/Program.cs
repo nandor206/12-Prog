@@ -4,7 +4,7 @@ namespace _1003
 {
     internal class Program
     {
-        struct data
+        struct DATA
         {
             public int CursorX { get; set; }
             public int CursorY { get; set; }
@@ -21,7 +21,7 @@ namespace _1003
             Eraser
         }
 
-        data general = new data();
+        static DATA info = new DATA();
         static PenStatus pen = PenStatus.Up;
         static int[,] foregroundsArray = new int[Console.WindowHeight, Console.WindowWidth];
         static char[,] shadesArray = new char[Console.WindowHeight, Console.WindowWidth];
@@ -30,17 +30,17 @@ namespace _1003
 
         static void Main(string[] args)
         {
-            general.CursorX = Console.WindowWidth / 2;
-            general.CursorY = Console.WindowHeight / 2;
-            general.background = 15;
-            general.cursorColor = 0;
+            info.CursorX = Console.WindowWidth / 2;
+            info.CursorY = Console.WindowHeight / 2;
+            info.background = ConsoleColor.White;
+            info.cursorColor = 0;
 
             BasicInfo();
 
             Console.WriteLine("Újat szeretnél kezdeni? (Y/n)");
             switch (Console.ReadLine()!.ToUpper())
             {
-                case "Y": New(); listOverWrite(general.background); break;
+                case "Y": New(); listOverWrite((int)info.background); break;
                 case "N": LoadFile(); break;
             }
 
@@ -63,13 +63,20 @@ namespace _1003
                         break;
 
                     case ConsoleKey.G:
-                        2 > pen > 0 ? PenStatus.Up : PenStatus.Down;
+                        pen = pen == PenStatus.Down ? PenStatus.Up : PenStatus.Down;
                         Console.Write("\b \b");
-                        Console.BackgroundColor = (ConsoleColor)szin;
+                        Console.ForegroundColor = info.cursorColor;
                         break;
 
                     case ConsoleKey.H:
-                        pen == 2 ? PenStatus.Up : PenStatus.Eraser;
+                        if (pen == PenStatus.Down || pen == PenStatus.Up)
+                        {
+                            pen = PenStatus.Eraser;
+                        }
+                        else
+                        {
+                            pen = PenStatus.Up;
+                        }
                         Radir();
                         Console.Write("\b \b");
                         break;
@@ -96,29 +103,29 @@ namespace _1003
 
         static void Move(int x, int y)
         {
-            (general.CursorX, general.CursorY) = Console.GetCursorPosition();
-            int newX = (general.CursorX + x + Console.WindowWidth) % Console.WindowWidth;
-            int newY = (general.CursorY + y + Console.WindowHeight) % Console.WindowHeight;
+            (info.CursorX, info.CursorY) = Console.GetCursorPosition();
+            int newX = (info.CursorX + x + Console.WindowWidth) % Console.WindowWidth;
+            int newY = (info.CursorY + y + Console.WindowHeight) % Console.WindowHeight;
 
             Console.SetCursorPosition(newX, newY);
-            CursorX = newX; CursorY = newY;
+            info.CursorX = newX; info.CursorY = newY;
 
-            if (pen == 1)
+            if (pen == PenStatus.Down)
             {
                 Console.Write(shades[opacity]);
-                Console.SetCursorPosition(general.CursorX, general.CursorY);
-                foregroundsArray[general.CursorY, general.CursorX] = szin;
-                shadesArray[general.CursorX, general.CursorY] = shades[opacity];
+                Console.SetCursorPosition(info.CursorX, info.CursorY);
+                foregroundsArray[info.CursorY, info.CursorX] = (int)info.cursorColor;
+                shadesArray[info.CursorX, info.CursorY] = shades[opacity];
             }
-            if (pen == 2)
+            if (pen == PenStatus.Up)
             {
                 Console.Write(' ');
-                Console.SetCursorPosition(general.CursorX, general.CursorY);
-                shadesArray[general.CursorX, general.CursorY] = '\0';
+                Console.SetCursorPosition(info.CursorX, info.CursorY);
+                shadesArray[info.CursorX, info.CursorY] = '\0';
             }
         }
 
-        static void KurzorSzin(int szin)
+        static void KurzorSzin(ConsoleColor szin)
         {
             Console.CursorTop = 0;
             Console.CursorLeft = 0;
@@ -126,13 +133,13 @@ namespace _1003
             Console.ForegroundColor = ConsoleColor.Black;
 
             Console.Write("A kurzor színe: ");
-            Console.BackgroundColor = (ConsoleColor)szin;
+            Console.BackgroundColor = szin;
             Console.Write(" ");
             Console.BackgroundColor = ConsoleColor.White;
             Console.Write(" ");
-            Console.BackgroundColor = (ConsoleColor)szin;
+            Console.BackgroundColor = szin;
 
-            Console.SetCursorPosition(general.CursorX, general.CursorY);
+            Console.SetCursorPosition(info.CursorX, info.CursorY);
         }
 
         static void Radir()
@@ -142,17 +149,17 @@ namespace _1003
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
 
-            if (pen == 2)
+            if (pen == PenStatus.Eraser)
             {
                 Console.Write("A radír be van kapcsolva ");
-                Console.BackgroundColor = (ConsoleColor)back;
+                Console.BackgroundColor = info.background;
             }
             else
             {
                 Console.Write("                         ");
             }
 
-            Console.SetCursorPosition(CursorX, CursorY);
+            Console.SetCursorPosition(info.CursorX, info.CursorY);
         }
 
         static void BasicInfo()
@@ -188,19 +195,15 @@ namespace _1003
 
         static void szinChange()
         {
-            szin = szin == 15 ? 0 : szin + 1;
-            Console.SetCursorPosition(CursorX, CursorY);
-            KurzorSzin(szin);
+            info.cursorColor = info.cursorColor == ConsoleColor.White ? 0 : info.cursorColor + 1;
+            Console.SetCursorPosition(info.CursorX, info.CursorY);
+            KurzorSzin(info.cursorColor);
+            Console.ForegroundColor = info.cursorColor;
 
-            if (pen == 0)
+            if (pen == PenStatus.Down)
             {
-                Console.BackgroundColor = (ConsoleColor)back;
-                Console.Write(' ');
+                Console.Write(shades[opacity]);
                 Console.CursorLeft--;
-            }
-            else
-            {
-                Console.ForegroundColor = (ConsoleColor)szin;
             }
         }
 
@@ -217,7 +220,7 @@ namespace _1003
             try
             {
                 num = int.Parse(Console.ReadLine()!);
-                general.background = (ConsoleColor)num;
+                info.background = (ConsoleColor)num;
             }
             catch (Exception e)
             {
@@ -228,7 +231,7 @@ namespace _1003
             Console.CursorSize = 100;
             Console.Clear();
             Console.SetCursorPosition(Console.WindowWidth / 2, Console.WindowHeight / 2);
-            KurzorSzin(szin); // Kurzor színének kiírása
+            KurzorSzin(info.cursorColor);
         }
 
         static void LoadFile()
@@ -240,7 +243,7 @@ namespace _1003
             Console.Write("Kérlek írd ide: ");
             Read(Console.ReadLine()!);
             
-            KurzorSzin(szin);
+            KurzorSzin(info.cursorColor);
         }
 
         static void Save(string filename)
@@ -248,21 +251,21 @@ namespace _1003
             string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), filename + ".rajz");
 
             List<List<ConsoleColor>> foregroundColors = new List<List<ConsoleColor>>();
-            List<List<int>> Opacities = new List<List<int>>();
+            List<List<char>> Opacities = new List<List<char>>();
             for (int i = 0; i < foregroundsArray.GetLength(0); i++)
             {
-                foregroundColors.Add(new List<int>());
-                Opacities.Add(new List<int>());
+                foregroundColors.Add(new List<ConsoleColor>());
+                Opacities.Add(new List<char>());
                 for (int j = 0; j < foregroundsArray.GetLength(1); j++)
                 {
                     foregroundColors[i].Add((ConsoleColor)foregroundsArray[i, j]);
-                    Opacities[i].Add(shades[i, j]);
+                    Opacities[i].Add(shadesArray[i, j]);
                 }
             }
 
-            general.foregrounds = foregroundColors;
+            info.foregrounds = foregroundColors;
 
-            string data = JsonSerializer.Serialize(adat);
+            string data = JsonSerializer.Serialize(info);
 
             if (!File.Exists(path))
             {
@@ -289,25 +292,25 @@ namespace _1003
             }
 
             string file = File.ReadAllText(path);
-            data data = JsonSerializer.Deserialize<data>(file);
+            DATA data = JsonSerializer.Deserialize<DATA>(file);
 
-            general = data;
+            info = data;
             Console.Clear();
             Console.SetCursorPosition(0, 0);
 
-            for (int i = 0; i < general.foregrounds.Count; i++)
+            for (int i = 0; i < info.foregrounds.Count; i++)
             {
-                for (int j = 0; j < general.foregrounds[i].Count; j++)
+                for (int j = 0; j < info.foregrounds[i].Count; j++)
                 {
-                    if (general.shades[i][j] == '\0')
+                    if (info.shades[i][j] == '\0')
                     {
-                        Console.BackgroundColor = general.background;
+                        Console.BackgroundColor = info.background;
                         Console.Write(" ");
                     }
                     else
                     {
-                        Console.ForegroundColor = general.foregrounds[i][j];
-                        Console.Write(shades[i][j]);
+                        Console.ForegroundColor = info.foregrounds[i][j];
+                        Console.Write(shadesArray[i, j]);
                     }
                 }
             }
