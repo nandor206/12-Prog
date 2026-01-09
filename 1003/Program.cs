@@ -2,19 +2,33 @@
 
 namespace _1003
 {
+
+    class Pixel
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public ConsoleColor Background { get; set; }
+        public ConsoleColor Foreground { get; set; }
+        public char Symbol { get; set; }
+        public string ToCsvLine()
+        {
+            return $"{X},{Y},{Foreground},{Background},{Symbol}";
+        }
+        public static Pixel FromCsvLine(string csvLine)
+        {
+            var splits = csvLine.Split(',');
+            return new Pixel()
+            {
+                X = int.Parse(splits[0]),
+                Y = int.Parse(splits[1]),
+                Foreground = (ConsoleColor)int.Parse(splits[2]),
+                Background = (ConsoleColor)int.Parse(splits[3]),
+                Symbol = splits[4][0]
+            };
+        }
+    }
     internal class Program
     {
-        struct DATA
-        {
-            public int CursorX { get; set; }
-            public int CursorY { get; set; }
-            public int opacity { get; set; }
-            public ConsoleColor background { get; set; }
-            public ConsoleColor cursorColor { get; set; }
-            public List<List<char>> shades { get; set; }
-            public List<List<ConsoleColor>> foregrounds { get; set; }
-        }
-
         enum PenStatus
         {
             Up,
@@ -22,20 +36,20 @@ namespace _1003
             Eraser
         }
 
-        static DATA info = new DATA();
-        static PenStatus pen = PenStatus.Up;
-        static ConsoleColor[,] foregroundsArray = new ConsoleColor[Console.WindowHeight, Console.WindowWidth];
-        static char[,] opacityArray = new char[Console.WindowHeight, Console.WindowWidth];
-        static char[] opacity = ['█', '▓', '▒', '░'];
+        static int CursorX = Console.WindowWidth / 2;
+        static int CursorY = Console.WindowHeight / 2;
+        static int SelectedOpacity = 0;
+        static ConsoleColor BackgroundColor = ConsoleColor.White;
+        static ConsoleColor CursorColor = ConsoleColor.Black;
+
+        static PenStatus Pen = PenStatus.Up;
+        static ConsoleColor[,] ForegroundsArray = new ConsoleColor[Console.WindowWidth, Console.WindowHeight];
+        static char[,] SymbolArray = new char[Console.WindowWidth, Console.WindowHeight];
+
+        static char[] Opacities = ['█', '▓', '▒', '░'];
 
         static void Main(string[] args)
         {
-            info.CursorX = Console.WindowWidth / 2;
-            info.CursorY = Console.WindowHeight / 2;
-            info.background = ConsoleColor.White;
-            info.cursorColor = 0;
-            info.opacity = 0;
-
             BasicInfo();
 
             Console.WriteLine("Újat rajzot szeretnél kezdeni? (Y/n)");
@@ -51,7 +65,7 @@ namespace _1003
                 case "N": LoadFile(); break;
             }
 
-            Console.SetCursorPosition(info.CursorX, info.CursorY);
+            Console.SetCursorPosition(CursorX, CursorY);
             Console.CursorSize = 100;
 
             while (true)
@@ -66,9 +80,9 @@ namespace _1003
 
                     case ConsoleKey.Spacebar:
                         szinChange();
-                        if (pen == PenStatus.Down)
+                        if (Pen == PenStatus.Down)
                         {
-                            Console.Write(opacity[info.opacity]+"\b");
+                            Console.Write("\b" + Opacities[SelectedOpacity] + "\b");
                         }
                         break;
 
@@ -78,9 +92,9 @@ namespace _1003
 
                     case ConsoleKey.Q:
                         opacityChange();
-                        if (pen == PenStatus.Down)
+                        if (Pen == PenStatus.Down)
                         {
-                            Console.Write(opacity[info.opacity] + "\b");
+                            Console.Write(Opacities[SelectedOpacity] + "\b");
                         }
                         else
                         {
@@ -89,10 +103,10 @@ namespace _1003
                         break;
 
                     case ConsoleKey.G:
-                        pen = pen == PenStatus.Down ? PenStatus.Up : PenStatus.Down;
-                        if (pen == PenStatus.Down)
+                        Pen = Pen == PenStatus.Down ? PenStatus.Up : PenStatus.Down;
+                        if (Pen == PenStatus.Down)
                         {
-                            Console.Write("\b" + opacity[info.opacity] + "\b");
+                            Console.Write("\b" + Opacities[SelectedOpacity] + "\b");
                         }
                         else
                         {
@@ -102,13 +116,13 @@ namespace _1003
                         break;
 
                     case ConsoleKey.H:
-                        if (pen == PenStatus.Down || pen == PenStatus.Up)
+                        if (Pen == PenStatus.Down || Pen == PenStatus.Up)
                         {
-                            pen = PenStatus.Eraser;
+                            Pen = PenStatus.Eraser;
                         }
                         else
                         {
-                            pen = PenStatus.Up;
+                            Pen = PenStatus.Up;
                         }
                         Radir();
                         Console.Write("\b  \b");
@@ -136,37 +150,37 @@ namespace _1003
 
         static void Move(int x, int y)
         {
-            (info.CursorX, info.CursorY) = Console.GetCursorPosition();
-            int newX = info.CursorX + x;
-            int newY = info.CursorY + y;
+            (CursorX, CursorY) = Console.GetCursorPosition();
+            int newY = CursorY + y;
+            int newX = CursorX + x;
 
             if (newY == Console.WindowHeight - 2 || newY == -1)
             {
-                newY = info.CursorY;
+                newY = CursorY;
             }
             if (newX == Console.WindowWidth || newX == -1)
             {
-                newX = info.CursorX;
+                newX = CursorX;
             }
             Console.SetCursorPosition(newX, newY);
-            info.CursorX = newX; info.CursorY = newY;
+            CursorX = newX; CursorY = newY;
 
-            if (pen == PenStatus.Down)
+            if (Pen == PenStatus.Down)
             {
-                Console.Write(opacity[info.opacity]);
-                Console.SetCursorPosition(info.CursorX, info.CursorY);
-                foregroundsArray[info.CursorY, info.CursorX] = info.cursorColor;
-                opacityArray[info.CursorY, info.CursorX] = opacity[info.opacity];
+                Console.Write(Opacities[SelectedOpacity]);
+                Console.SetCursorPosition(CursorX, CursorY);
+                ForegroundsArray[CursorY, CursorX] = CursorColor;
+                SymbolArray[CursorX, CursorY] = Opacities[SelectedOpacity];
             }
-            if (pen == PenStatus.Up)
+            if (Pen == PenStatus.Up)
             {
-                Console.SetCursorPosition(info.CursorX, info.CursorY);
+                Console.SetCursorPosition(CursorX, CursorY);
             }
-            if (pen == PenStatus.Eraser)
+            if (Pen == PenStatus.Eraser)
             {
                 Console.Write(' ');
-                Console.SetCursorPosition(info.CursorX, info.CursorY);
-                opacityArray[info.CursorY, info.CursorX] = ' ';
+                Console.SetCursorPosition(CursorX, CursorY);
+                SymbolArray[CursorY, CursorX] = ' ';
             }
         }
 
@@ -178,16 +192,16 @@ namespace _1003
             Console.ForegroundColor = ConsoleColor.Black;
 
             Console.Write("A kurzor színe: ");
-            Console.BackgroundColor = info.cursorColor;
+            Console.BackgroundColor = CursorColor;
             Console.Write(" ");
             Console.BackgroundColor = ConsoleColor.White;
             Console.Write(" ║ ");
-            Console.BackgroundColor = info.background;
-            Console.SetCursorPosition(info.CursorX, info.CursorY);
-            Console.ForegroundColor = info.cursorColor;
-            if (pen == PenStatus.Down)
+            Console.BackgroundColor = BackgroundColor;
+            Console.SetCursorPosition(CursorX, CursorY);
+            Console.ForegroundColor = CursorColor;
+            if (Pen == PenStatus.Down)
             {
-                Console.Write(opacity[info.opacity]);
+                Console.Write(Opacities[SelectedOpacity]);
             }
         }
 
@@ -198,11 +212,11 @@ namespace _1003
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
 
-            Console.Write($"A kurzor áttetszősége: {info.opacity + 1} ║");
-            Console.BackgroundColor = info.background;
+            Console.Write($"A kurzor áttetszősége: {SelectedOpacity + 1} ║");
+            Console.BackgroundColor = BackgroundColor;
 
-            Console.SetCursorPosition(info.CursorX, info.CursorY);
-            Console.ForegroundColor = info.cursorColor;
+            Console.SetCursorPosition(CursorX, CursorY);
+            Console.ForegroundColor = CursorColor;
         }
 
         static void Radir()
@@ -212,7 +226,7 @@ namespace _1003
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
 
-            if (pen == PenStatus.Eraser)
+            if (Pen == PenStatus.Eraser)
             {
                 Console.Write("A radír be van kapcsolva");
             }
@@ -221,8 +235,8 @@ namespace _1003
                 Console.Write("A kurzor felvan engedve ");
             }
 
-            Console.SetCursorPosition(info.CursorX, info.CursorY);
-            Console.BackgroundColor = info.background;
+            Console.SetCursorPosition(CursorX, CursorY);
+            Console.BackgroundColor = BackgroundColor;
         }
 
         static void Toll()
@@ -232,17 +246,17 @@ namespace _1003
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
 
-            if (pen == PenStatus.Down)
+            if (Pen == PenStatus.Down)
             {
                 Console.Write("A kurzor le van rakva  ");
             }
-            else if (pen == PenStatus.Up)
+            else if (Pen == PenStatus.Up)
             {
                 Console.Write("A kurzor felvan engedve ");
             }
 
-            Console.SetCursorPosition(info.CursorX, info.CursorY);
-            Console.BackgroundColor = info.background;
+            Console.SetCursorPosition(CursorX, CursorY);
+            Console.BackgroundColor = BackgroundColor;
         }
 
         static void BasicInfo()
@@ -265,16 +279,16 @@ namespace _1003
 
         static void szinChange()
         {
-            info.cursorColor = info.cursorColor == ConsoleColor.White ? 0 : info.cursorColor + 1;
+            CursorColor = CursorColor == ConsoleColor.White ? 0 : CursorColor + 1;
             KurzorSzin();
-            Console.BackgroundColor = info.background;
+            Console.BackgroundColor = BackgroundColor;
         }
 
         static void opacityChange()
         {
-            info.opacity = info.opacity == 3 ? 0 : info.opacity + 1;
+            SelectedOpacity = SelectedOpacity == 3 ? 0 : SelectedOpacity + 1;
             KurzorOpacityLevel();
-            Console.BackgroundColor = info.background;
+            Console.BackgroundColor = BackgroundColor;
         }
 
         static void New()
@@ -293,7 +307,7 @@ namespace _1003
                 {
                     string input = Console.ReadLine()!.Trim();
                     num = int.Parse(input);
-                    info.background = (ConsoleColor)num;
+                    BackgroundColor = (ConsoleColor)num;
                 }
                 catch (FormatException)
                 {
@@ -358,13 +372,13 @@ namespace _1003
                 filename = Console.ReadLine()!;
                 path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), filename + ".rajz");
             }
-            Read(path);
+            //Read(path);
             TUI();
 
-            if (info.CursorY >= Console.WindowHeight - 2)
+            if (CursorY >= Console.WindowHeight - 2 || CursorY < 0 || CursorX >= Console.WindowWidth || CursorX < 0)
             {
-                info.CursorY = Console.WindowHeight / 2;
-                info.CursorX = Console.WindowWidth / 2;
+                CursorY = Console.WindowHeight / 2;
+                CursorX = Console.WindowWidth / 2;
             }
 
         }
@@ -373,32 +387,38 @@ namespace _1003
         {
             string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), filename + ".rajz");
 
-            List<List<ConsoleColor>> foregroundColors = new List<List<ConsoleColor>>();
-            List<List<char>> Opacities = new List<List<char>>();
-            for (int i = 0; i < foregroundsArray.GetLength(0); i++)
-            {
-                foregroundColors.Add(new List<ConsoleColor>());
-                Opacities.Add(new List<char>());
-                for (int j = 0; j < foregroundsArray.GetLength(1); j++)
-                {
-                    foregroundColors[i].Add(foregroundsArray[i, j]);
-                    Opacities[i].Add(opacityArray[i, j]);
-                }
-            }
-
-            info.foregrounds = foregroundColors;
-            info.shades = Opacities;
-
-            string data = JsonSerializer.Serialize(info);
-
             if (!File.Exists(path))
             {
                 File.Create(path).Close();
             }
 
-            using (StreamWriter sw = new StreamWriter(path))
+            string save_data = "";
+
+            for (int i = 0; i < ForegroundsArray.GetLength(0) - 1; i++)
             {
-                sw.WriteLine(data);
+                for (int j = 0; i < ForegroundsArray.GetLength(1) - 1; i++)
+                {
+                    if (ForegroundsArray[i, j] == 0 && SymbolArray[i, j] == '\0')
+                    {
+                        continue;
+                    }
+                    else
+                    {
+Pixel pixel = new Pixel()
+                        {
+                            X = i,
+                            Y = j,
+                            Background = BackgroundColor,
+                            Foreground = ForegroundsArray[i, j],
+                            Symbol = SymbolArray[i, j]
+                        };
+                    }
+                    using (StreamWriter sw = new StreamWriter(path))
+                    {
+                        
+                        sw.WriteLine(pixel.ToCsvLine());
+                    }
+                }
             }
 
             Console.WriteLine("Sikeres mentés");
@@ -406,33 +426,33 @@ namespace _1003
             Environment.Exit(0);
         }
 
-        static void Read(string path)
-        {
-            string file = File.ReadAllText(path);
-            DATA data = JsonSerializer.Deserialize<DATA>(file);
+        //static void Read(string path)
+        //{
+        //    string file = File.ReadAllText(path);
+        //    Current data = JsonSerializer.Deserialize<Current>(file);
 
-            info = data;
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
-            Console.BackgroundColor = info.background;
+        //    info = data;
+        //    Console.Clear();
+        //    Console.SetCursorPosition(0, 0);
+        //    Console.BackgroundColor = BackgroundColor;
 
-            for (int i = 0; i < info.foregrounds.Count; i++)
-            {
-                for (int j = 0; j < info.foregrounds[i].Count; j++)
-                {
-                    if (info.shades[i][j] == ' ' || info.shades[i][j] == '\0')
-                    {
-                        Console.Write(" ");
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = info.foregrounds[i][j];
-                        Console.Write(info.shades[i][j]);
-                        foregroundsArray[i, j] = info.foregrounds[i][j];
-                        opacityArray[i, j] = info.shades[i][j];
-                    }
-                }
-            }
-        }
+        //    for (int i = 0; i < info.Foregrounds.Count; i++)
+        //    {
+        //        for (int j = 0; j < info.Foregrounds[i].Count; j++)
+        //        {
+        //            if (info.Shades[i][j] == ' ' || info.Shades[i][j] == '\0')
+        //            {
+        //                Console.Write(" ");
+        //            }
+        //            else
+        //            {
+        //                Console.ForegroundColor = info.Foregrounds[i][j];
+        //                Console.Write(info.Shades[i][j]);
+        //                ForegroundsArray[i, j] = info.Foregrounds[i][j];
+        //                SymbolArray[i, j] = info.Shades[i][j];
+        //            }
+        //        }
+        //    }
+        //}
     }
 }
