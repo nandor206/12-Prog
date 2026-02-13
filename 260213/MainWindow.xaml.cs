@@ -17,7 +17,9 @@ namespace _260213
 
     public partial class MainWindow : Window
     {
-        SubWindow subWindow = new SubWindow();
+        SubWindow subWindow = new();
+        public Main main = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -44,9 +46,9 @@ namespace _260213
 
     public class Main
     {
-        int flags = 0;
-        int time = 0;
-        int mines = 0;
+        public int flags = 0;
+        public int time = 0;
+        public int mines = 0;
         public void InitGame()
         {
 

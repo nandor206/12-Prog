@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_260213"
         mc:Ignorable="d"
-        Title="Minesweeper" Height="240" Width="420" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closed="Window_Closed">
+        Title="Minesweeper" Height="240" Width="420" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closed="Window_Closed" Loaded="Window_Loaded">
     <Grid>
         <Label Content="Time passed:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.574,-0.977" Height="54" Width="190" FontSize="30"/>
         <TextBox Name="timePassed" HorizontalAlignment="Left" Margin="200,10,0,0" TextWrapping="NoWrap" Text="0" VerticalAlignment="Top" Width="190" Height="54" RenderTransformOrigin="-1.574,-0.977" FontSize="37" IsEnabled="False"/>

@@ -22,7 +22,7 @@ namespace _260213
         public SubWindow()
         {
             InitializeComponent();
-            txtNum.Text = _numValue.ToString();
+            txtNum.Text = ((MainWindow)this.Owner).main.mines.ToString();
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -32,14 +32,13 @@ namespace _260213
                 ((MainWindow)this.Owner).ShowSubWindow();
             }
         }
-        private int _numValue = 7;
 
         public int NumValue
         {
-            get { return _numValue; }
+            get { return ((MainWindow)this.Owner).main.mines; }
             set
             {
-                _numValue = value;
+                ((MainWindow)this.Owner).main.mines = value;
                 txtNum.Text = value.ToString();
             }
         }
@@ -67,8 +66,8 @@ namespace _260213
                 return;
             }
 
-            if (!int.TryParse(txtNum.Text, out _numValue))
-                txtNum.Text = _numValue.ToString();
+            if (!int.TryParse(txtNum.Text, out ((MainWindow)this.Owner).main.mines))
+                txtNum.Text = ((MainWindow)this.Owner).main.mines.ToString();
         }
 
     }
