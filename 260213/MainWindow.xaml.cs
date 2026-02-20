@@ -81,18 +81,19 @@ namespace _260213
                     Buttons_array[i, j] = new ButtonStruct();
 
             Random random = new Random();
-            int placed = 0;
-            while (placed < mines)
+            for (int i = 0; i < mines; i++)
             {
-                int row = random.Next(0, Rows);
-                int col = random.Next(0, Columns);
+                int row = random.Next(Rows);
+                int col = random.Next(Columns);
                 if (!Buttons_array[row, col].IsMine)
                 {
                     Buttons_array[row, col].IsMine = true;
-                    placed++;
+                }
+                else
+                {
+                    i--;
                 }
             }
-            mines = placed;
 
             for (int row = 0; row < Rows; row++)
             {
@@ -103,6 +104,9 @@ namespace _260213
                     {
                         for (int y = -1; y <= 1; y++)
                         {
+                            if (x == 0 && y == 0)
+                                continue;
+
                             int newRow = row + x;
                             int newCol = col + y;
                             if (newRow >= 0 && newRow < Rows && newCol >= 0 && newCol < Columns)
@@ -113,6 +117,7 @@ namespace _260213
                     Buttons_array[row, col].AdjacentMines = count;
                 }
             }
+
         }
 
         public void LeftClick(object sender, RoutedEventArgs e)
