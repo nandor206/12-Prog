@@ -1,14 +1,7 @@
-﻿using System.Printing;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace _260213
 {
@@ -69,7 +62,7 @@ namespace _260213
         public int flags = 0;
         public int correctFlags = 0;
         public int Rows = 11;
-        public int Columns = 12;
+        public int Columns = 10;
         public ButtonStruct[,] Buttons_array { get; set; } = new ButtonStruct[11, 12];
         public void InitGame(Grid map)
         {
@@ -83,8 +76,8 @@ namespace _260213
             Random random = new Random();
             for (int i = 0; i < mines; i++)
             {
-                int row = random.Next(Rows);
-                int col = random.Next(Columns);
+                int row = random.Next(0, Rows);
+                int col = random.Next(0, Columns);
                 if (!Buttons_array[row, col].IsMine)
                 {
                     Buttons_array[row, col].IsMine = true;
@@ -117,7 +110,6 @@ namespace _260213
                     Buttons_array[row, col].AdjacentMines = count;
                 }
             }
-
         }
 
         public void LeftClick(object sender, RoutedEventArgs e)
